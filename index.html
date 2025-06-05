@@ -86,10 +86,6 @@
         <div class="card">
             <div class="card-header">数据展示</div>
             <div class="card-body">
-                <div class="stats-container" id="stats-container">
-                    <!-- 统计信息将通过JavaScript动态添加 -->
-                </div>
-                
                 <div class="chart-container">
                     <h3>原始考试成绩分布</h3>
                     <canvas id="original-chart"></canvas>
@@ -121,6 +117,9 @@
                 </div>
                 
                 <div id="chart-view" class="tab-content">
+                    <div class="stats-container" id="stats-container">
+                        <!-- 统计信息将通过JavaScript动态添加 -->
+                    </div>
                     <div class="chart-container">
                         <h3>最终成绩分布（符合正态分布）</h3>
                         <canvas id="final-chart"></canvas>

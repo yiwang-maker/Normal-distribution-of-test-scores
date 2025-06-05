@@ -420,6 +420,49 @@ function calculateFinalScore(student, weights) {
     return finalScore.toFixed(1);
 }
 
+// 更新最终成绩统计信息
+function updateFinalStats(data) {
+    if (!data || data.length === 0) return;
+
+    // 获取最终成绩数组
+    const scores = data.map(item => parseFloat(item['最终成绩'])).filter(score => !isNaN(score));
+
+    // 计算统计信息
+    const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const sortedScores = [...scores].sort((a, b) => a - b);
+    const median = sortedScores.length % 2 === 0 ?
+        (sortedScores[sortedScores.length / 2 - 1] + sortedScores[sortedScores.length / 2]) / 2 :
+        sortedScores[Math.floor(sortedScores.length / 2)];
+    const min = Math.min(...scores);
+    const max = Math.max(...scores);
+    const variance = scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length;
+    const stdDev = Math.sqrt(variance);
+
+    // 更新统计信息显示
+    statsContainer.innerHTML = `
+        <div class="stat-item">
+            <h3>平均分</h3>
+            <p>${mean.toFixed(2)}</p>
+        </div>
+        <div class="stat-item">
+            <h3>中位数</h3>
+            <p>${median.toFixed(2)}</p>
+        </div>
+        <div class="stat-item">
+            <h3>最低分</h3>
+            <p>${min.toFixed(2)}</p>
+        </div>
+        <div class="stat-item">
+            <h3>最高分</h3>
+            <p>${max.toFixed(2)}</p>
+        </div>
+        <div class="stat-item">
+            <h3>标准差</h3>
+            <p>${stdDev.toFixed(2)}</p>
+        </div>
+    `;
+}
+
 // 显示处理后的数据
 function displayProcessedData() {
     if (!processedData || processedData.length === 0) return;
@@ -446,6 +489,9 @@ function displayProcessedData() {
     resultsSection.classList.remove('hidden');
     exportResultBtn.disabled = false;
 
+    // 更新最终成绩统计信息
+    updateFinalStats(processedData);
+    
     // 渲染最终成绩图表
     const finalScores = processedData.map(item => parseFloat(item['最终成绩'])).filter(score => !isNaN(score));
     renderFinalChart(finalScores);

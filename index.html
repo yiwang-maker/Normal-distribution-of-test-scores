@@ -63,11 +63,16 @@
                 
                 <!-- 最终成绩下限设置 -->
                 <div class="min-score-setting">
-                    <h3>最终成绩下限设置</h3>
+                    <h3>最终成绩设置</h3>
                     <div class="setting-row">
                         <label for="min-score-input">最低分数：</label>
                         <input type="number" id="min-score-input" min="0" max="100" value="60" step="1">
                         <p class="setting-hint">设置最终成绩的最低分数，所有低于此分数的成绩将被调整为此值</p>
+                    </div>
+                    <div class="setting-row">
+                        <label for="target-mean-input">目标平均分：</label>
+                        <input type="number" id="target-mean-input" min="0" max="100" value="70" step="1">
+                        <p class="setting-hint">设置最终成绩的目标平均分，成绩分布将以此为中心</p>
                     </div>
                 </div>
                 
@@ -173,7 +178,7 @@
                             <li>分析原始考试成绩</li>
                             <li>生成或调整笔记和出勤成绩</li>
                             <li>通过调整笔记和出勤成绩，使最终成绩符合正态分布</li>
-                            <li>默认目标分布的平均分为70分，标准差为10</li>
+                            <li>根据您设置的目标平均分（默认为70分）和标准差（固定为10）调整成绩分布</li>
                         </ul>
                         <p>这种方法可以使成绩分布更加合理，避免分数过于集中或分散，同时保持考试成绩不变。</p>
                     </div>
@@ -184,7 +189,7 @@
 
     <footer>
         <div class="container">
-            <p>© 2023 高校教师成绩管理助手 | 所有数据仅在本地处理，保障信息安全</p>
+            <p>© 2025 高校教师成绩管理助手 | 所有数据仅在本地处理，保障信息安全</p>
         </div>
     </footer>
 

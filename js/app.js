@@ -26,6 +26,7 @@ const addWeightBtn = document.getElementById('add-weight-btn');
 const weightTotalError = document.getElementById('weight-total-error');
 const weightItems = document.getElementById('weight-items');
 const minScoreInput = document.getElementById('min-score-input');
+const targetMeanInput = document.getElementById('target-mean-input');
 
 // 初始化权重项
 const defaultWeights = [
@@ -353,7 +354,7 @@ function adjustScoresToNormalDistribution() {
     const currentStdDev = Math.sqrt(currentVariance);
     
     // 目标正态分布参数
-    const targetMean = 70; // 目标平均分
+    const targetMean = parseFloat(targetMeanInput.value) || 70; // 使用设置的目标平均分
     const targetStdDev = 10; // 目标标准差
     
     // 获取最终成绩下限
@@ -518,6 +519,7 @@ function renderFinalChart(scores) {
 
     const ctx = finalChartCanvas.getContext('2d');
     const { histogramData, normalCurveData } = createHistogramData(scores);
+    const targetMean = parseFloat(targetMeanInput.value) || 70;
 
     finalChart = new Chart(ctx, {
         type: 'bar',
@@ -563,7 +565,7 @@ function renderFinalChart(scores) {
             plugins: {
                 title: {
                     display: true,
-                    text: '最终成绩分布（符合正态分布）'
+                    text: `最终成绩分布（符合正态分布，平均分${targetMean}）`
                 }
             }
         }

@@ -354,11 +354,11 @@ function adjustScoresToNormalDistribution() {
     const currentStdDev = Math.sqrt(currentVariance);
     
     // 目标正态分布参数
-    const targetMean = parseFloat(targetMeanInput.value) || 70; // 使用设置的目标平均分
-    const targetStdDev = 10; // 目标标准差
+    const targetMean = parseFloat(targetMeanInput.value) || 78;
+    const targetStdDev = 8; // 目标标准差
     
     // 获取最终成绩下限
-    const minScore = parseFloat(minScoreInput.value) || 0;
+    const minScore = parseFloat(minScoreInput.value) || 65;
     
     // 调整笔记和出勤成绩，使最终成绩符合目标正态分布
     processedData = processedData.map(student => {
@@ -519,7 +519,7 @@ function renderFinalChart(scores) {
 
     const ctx = finalChartCanvas.getContext('2d');
     const { histogramData, normalCurveData } = createHistogramData(scores);
-    const targetMean = parseFloat(targetMeanInput.value) || 70;
+    const targetMean = parseFloat(targetMeanInput.value) || 78;
 
     finalChart = new Chart(ctx, {
         type: 'bar',

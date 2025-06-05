@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高校教师成绩管理助手</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- 引入Chart.js库 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 引入xlsx库 -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <!-- 引入Papa Parse库 -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse/papaparse.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>高校教师成绩管理助手</h1>
+            <p>使学生成绩符合正态分布</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- 成绩导入部分 -->
+        <div class="card">
+            <div class="card-header">成绩导入</div>
+            <div class="card-body">
+                <!-- 导入方式标签页 -->
+                <div class="import-tabs">
+                    <button class="import-tab active" data-target="file-import">文件导入</button>
+                    <button class="import-tab" data-target="paste-import">文本粘贴</button>
+                </div>
+                
+                <!-- 文件导入内容 -->
+                <div id="file-import" class="import-content tab-content active">
+                    <div class="upload-area">
+                        <p>请上传包含学生成绩的Excel(.xlsx)或CSV(.csv)文件</p>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="file-input" accept=".xlsx,.csv">
+                            <label for="file-input">选择文件</label>
+                        </div>
+                        <div class="template-download">
+                            <button id="download-template-btn" class="btn btn-primary">下载导入模板</button>
+                        </div>
+                        <p class="privacy-notice">所有数据仅在本地处理，不会上传到任何服务器</p>
+                    </div>
+                </div>
+                
+                <!-- 文本粘贴内容 -->
+                <div id="paste-import" class="import-content tab-content">
+                    <div class="paste-area">
+                        <p>请粘贴包含学生成绩的文本数据（制表符分隔，第一行为表头）</p>
+                        <textarea id="paste-textarea" placeholder="例如：&#10;学生ID&#9;姓名&#9;考试成绩&#10;001&#9;张三&#9;85&#10;002&#9;李四&#9;72"></textarea>
+                        <button id="process-data-paste-btn" class="btn btn-primary" disabled>处理粘贴数据</button>
+                        <p class="privacy-notice">所有数据仅在本地处理，不会上传到任何服务器</p>
+                    </div>
+                </div>
+                
+                <!-- 自定义成绩计算公式设置 -->
+                <div class="weight-settings">
+                    <h3>成绩计算公式设置</h3>
+                    
+                    <!-- 默认权重显示 -->
+                    <div id="default-weights-info">
+                        <p>默认计算公式：最终成绩 = 考试成绩×0.5 + 笔记×0.3 + 出勤×0.2</p>
+                    </div>
+                    
+                    <!-- 自定义权重开关 -->
+                    <div class="weight-toggle">
+                        <input type="checkbox" id="custom-weights-toggle">
+                        <label for="custom-weights-toggle">自定义成绩计算公式</label>
+                    </div>
+                    
+                    <!-- 自定义权重容器 -->
+                    <div id="custom-weights-container" class="hidden">
+                        <p>请设置各评分项的权重（总和必须为1）</p>
+                        <div id="weight-items">
+                            <!-- 权重项将通过JavaScript动态添加 -->
+                        </div>
+                        <button id="add-weight-btn" class="btn btn-primary">添加评分项</button>
+                        <div id="weight-total-error" class="weight-error hidden"></div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="process-data-btn" class="btn btn-primary" disabled>处理数据</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据展示部分 -->
+        <div class="card">
+            <div class="card-header">数据展示</div>
+            <div class="card-body">
+                <div class="stats-container" id="stats-container">
+                    <!-- 统计信息将通过JavaScript动态添加 -->
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="original-chart"></canvas>
+                </div>
+                
+                <div class="table-container">
+                    <table id="data-table">
+                        <!-- 表格内容将通过JavaScript动态添加 -->
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结果查看部分 -->
+        <div id="results-section" class="card hidden">
+            <div class="card-header">处理结果</div>
+            <div class="card-body">
+                <div class="tabs">
+                    <button class="tab-btn active" data-target="table-view">表格视图</button>
+                    <button class="tab-btn" data-target="chart-view">图表视图</button>
+                </div>
+                
+                <div id="table-view" class="tab-content active">
+                    <div class="table-container">
+                        <table id="results-table">
+                            <!-- 结果表格内容将通过JavaScript动态添加 -->
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="chart-view" class="tab-content">
+                    <div class="chart-container">
+                        <canvas id="final-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="export-result-btn" class="btn btn-success" disabled>导出结果</button>
+                    <button id="restart-btn" class="btn btn-warning">重新开始</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 使用帮助部分 -->
+        <div class="card">
+            <div class="card-header">使用帮助</div>
+            <div class="card-body">
+                <div class="accordion-item active">
+                    <div class="accordion-header">如何使用本工具？</div>
+                    <div class="accordion-content">
+                        <ol>
+                            <li>上传包含学生成绩的Excel或CSV文件，或者直接粘贴成绩数据</li>
+                            <li>根据需要自定义成绩计算公式</li>
+                            <li>点击"处理数据"按钮</li>
+                            <li>查看处理结果，可以切换表格和图表视图</li>
+                            <li>点击"导出结果"按钮将处理后的成绩导出为Excel文件</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <div class="accordion-header">数据格式要求</div>
+                    <div class="accordion-content">
+                        <p>上传的Excel或CSV文件必须包含以下列：</p>
+                        <ul>
+                            <li><strong>学生ID</strong>：学生的唯一标识符</li>
+                            <li><strong>考试成绩</strong>：学生的原始考试成绩（0-100分）</li>
+                        </ul>
+                        <p>可选列：</p>
+                        <ul>
+                            <li><strong>姓名</strong>：学生姓名</li>
+                            <li>其他任何您想包含的信息</li>
+                        </ul>
+                        <p>如果不确定格式，可以点击"下载导入模板"按钮获取示例文件。</p>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <div class="accordion-header">关于正态分布</div>
+                    <div class="accordion-content">
+                        <p>正态分布是一种常见的概率分布，在教育评估中广泛应用。本工具会：</p>
+                        <ul>
+                            <li>分析原始考试成绩</li>
+                            <li>生成笔记和出勤成绩</li>
+                            <li>调整这些成绩，使最终成绩符合正态分布</li>
+                            <li>默认目标分布的平均分为70分，标准差为10</li>
+                        </ul>
+                        <p>这种方法可以使成绩分布更加合理，避免分数过于集中或分散。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2023 高校教师成绩管理助手 | 所有数据仅在本地处理，保障信息安全</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,2 +1,2 @@
 # -
-让学生的考试成绩符合正太分布
+Make students' test scores conform to the normal distribution

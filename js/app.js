@@ -5,11 +5,9 @@ let originalChart = null;
 let finalChart = null;
 
 // DOM元素
-const fileInput = document.getElementById('file-input');
 const pasteTextarea = document.getElementById('paste-textarea');
 const processDataBtn = document.getElementById('process-data-btn');
 const processDataPasteBtn = document.getElementById('process-data-paste-btn');
-const downloadTemplateBtn = document.getElementById('download-template-btn');
 const exportResultBtn = document.getElementById('export-result-btn');
 const restartBtn = document.getElementById('restart-btn');
 const dataTable = document.getElementById('data-table');
@@ -21,26 +19,24 @@ const resultsSection = document.getElementById('results-section');
 const tabBtns = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 const accordionItems = document.querySelectorAll('.accordion-item');
-const importTabs = document.querySelectorAll('.import-tab');
-const importContents = document.querySelectorAll('.import-content');
 const customWeightsToggle = document.getElementById('custom-weights-toggle');
 const defaultWeightsInfo = document.getElementById('default-weights-info');
 const customWeightsContainer = document.getElementById('custom-weights-container');
 const addWeightBtn = document.getElementById('add-weight-btn');
 const weightTotalError = document.getElementById('weight-total-error');
 const weightItems = document.getElementById('weight-items');
+const minScoreInput = document.getElementById('min-score-input');
 
 // 初始化权重项
 const defaultWeights = [
-    { name: '考试成绩', weight: 0.5, fixed: true },
-    { name: '笔记', weight: 0.3, fixed: false },
-    { name: '出勤', weight: 0.2, fixed: false }
+    { name: '考试成绩', weight: 0.5, fixed: true, use_imported: true },
+    { name: '笔记', weight: 0.3, fixed: false, use_imported: false },
+    { name: '出勤', weight: 0.2, fixed: false, use_imported: false }
 ];
 
 let customWeights = [...defaultWeights];
 
 // 事件监听器
-fileInput.addEventListener('change', handleFileUpload);
 pasteTextarea.addEventListener('input', function() {
     if (pasteTextarea.value.trim() !== '') {
         processDataPasteBtn.disabled = false;
@@ -50,7 +46,6 @@ pasteTextarea.addEventListener('input', function() {
 });
 processDataBtn.addEventListener('click', processData);
 processDataPasteBtn.addEventListener('click', processPastedData);
-downloadTemplateBtn.addEventListener('click', downloadTemplate);
 exportResultBtn.addEventListener('click', exportResults);
 restartBtn.addEventListener('click', restart);
 
@@ -59,16 +54,6 @@ tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         tabBtns.forEach(b => b.classList.remove('active'));
         tabContents.forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.target).classList.add('active');
-    });
-});
-
-// 导入标签页切换
-importTabs.forEach(btn => {
-    btn.addEventListener('click', () => {
-        importTabs.forEach(b => b.classList.remove('active'));
-        importContents.forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(btn.dataset.target).classList.add('active');
     });
@@ -99,7 +84,7 @@ customWeightsToggle.addEventListener('change', function() {
 
 // 添加权重项
 addWeightBtn.addEventListener('click', function() {
-    customWeights.push({ name: '', weight: 0, fixed: false });
+    customWeights.push({ name: '', weight: 0, fixed: false, use_imported: false });
     renderWeightItems();
     checkWeightTotal();
 });
@@ -111,6 +96,19 @@ function renderWeightItems() {
     customWeights.forEach((item, index) => {
         const weightItem = document.createElement('div');
         weightItem.className = 'weight-item';
+        
+        // 添加复选框
+        const useImportedCheckbox = document.createElement('input');
+        useImportedCheckbox.type = 'checkbox';
+        useImportedCheckbox.id = `use-imported-${index}`;
+        useImportedCheckbox.checked = item.use_imported;
+        useImportedCheckbox.addEventListener('change', function() {
+            customWeights[index].use_imported = this.checked;
+        });
+        
+        const checkboxLabel = document.createElement('label');
+        checkboxLabel.htmlFor = `use-imported-${index}`;
+        checkboxLabel.className = 'checkbox-label';
         
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
@@ -144,6 +142,8 @@ function renderWeightItems() {
             }
         });
         
+        weightItem.appendChild(useImportedCheckbox);
+        weightItem.appendChild(checkboxLabel);
         weightItem.appendChild(nameInput);
         weightItem.appendChild(weightInput);
         weightItem.appendChild(removeBtn);
@@ -225,68 +225,6 @@ function processPastedData() {
     }
 }
 
-// 处理文件上传
-function handleFileUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const fileExtension = file.name.split('.').pop().toLowerCase();
-
-    if (fileExtension === 'xlsx') {
-        processExcelFile(file);
-    } else if (fileExtension === 'csv') {
-        processCSVFile(file);
-    } else {
-        alert('请上传.xlsx或.csv格式的文件');
-    }
-}
-
-// 处理Excel文件
-function processExcelFile(file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-        // 确保数据包含必要的字段
-        if (jsonData.length > 0 && jsonData[0].hasOwnProperty('学生ID') && jsonData[0].hasOwnProperty('考试成绩')) {
-            originalData = jsonData;
-            displayData(originalData);
-            updateStats(originalData);
-        } else {
-            alert('文件格式不正确，请确保包含学生ID和考试成绩列');
-        }
-    };
-    reader.readAsArrayBuffer(file);
-}
-
-// 处理CSV文件
-function processCSVFile(file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        Papa.parse(e.target.result, {
-            header: true,
-            dynamicTyping: true,
-            complete: function(results) {
-                if (results.data.length > 0 && results.data[0].hasOwnProperty('学生ID') && results.data[0].hasOwnProperty('考试成绩')) {
-                    originalData = results.data;
-                    displayData(originalData);
-                    updateStats(originalData);
-                } else {
-                    alert('文件格式不正确，请确保包含学生ID和考试成绩列');
-                }
-            },
-            error: function(error) {
-                alert('解析CSV文件失败: ' + error.message);
-            }
-        });
-    };
-    reader.readAsText(file);
-}
-
 // 显示数据
 function displayData(data) {
     if (!data || data.length === 0) return;
@@ -363,14 +301,6 @@ function updateStats(data) {
 function processData() {
     if (originalData.length === 0) return;
 
-    // 获取考试成绩数组
-    const examScores = originalData.map(item => parseFloat(item['考试成绩'])).filter(score => !isNaN(score));
-
-    // 计算原始考试成绩的统计信息
-    const mean = examScores.reduce((sum, score) => sum + score, 0) / examScores.length;
-    const variance = examScores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / examScores.length;
-    const stdDev = Math.sqrt(variance);
-
     // 使用自定义权重或默认权重
     const weights = customWeightsToggle.checked ? customWeights : defaultWeights;
     
@@ -419,6 +349,9 @@ function adjustScoresToNormalDistribution() {
     const targetMean = 70; // 目标平均分
     const targetStdDev = 10; // 目标标准差
     
+    // 获取最终成绩下限
+    const minScore = parseFloat(minScoreInput.value) || 0;
+    
     // 调整最终成绩以符合目标正态分布
     processedData = processedData.map(student => {
         const result = { ...student };
@@ -428,10 +361,11 @@ function adjustScoresToNormalDistribution() {
         const zScore = (finalScore - currentMean) / currentStdDev;
         
         // 应用目标分布参数
-        const adjustedScore = zScore * targetStdDev + targetMean;
+        let adjustedScore = zScore * targetStdDev + targetMean;
         
-        // 确保调整后的成绩在合理范围内
-        result['最终成绩'] = Math.max(0, Math.min(100, adjustedScore)).toFixed(1);
+        // 确保调整后的成绩在合理范围内，并且不低于设定的下限
+        adjustedScore = Math.max(minScore, Math.min(100, adjustedScore));
+        result['最终成绩'] = adjustedScore.toFixed(1);
         
         return result;
     });
@@ -667,28 +601,6 @@ function exportResults() {
     XLSX.writeFile(wb, '成绩结果.xlsx');
 }
 
-// 下载模板
-function downloadTemplate() {
-    // 创建示例数据
-    const templateData = [
-        { '学生ID': '001', '姓名': '张三', '考试成绩': 85 },
-        { '学生ID': '002', '姓名': '李四', '考试成绩': 72 },
-        { '学生ID': '003', '姓名': '王五', '考试成绩': 63 },
-        { '学生ID': '004', '姓名': '赵六', '考试成绩': 91 },
-        { '学生ID': '005', '姓名': '钱七', '考试成绩': 78 }
-    ];
-
-    // 创建工作簿
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(templateData);
-
-    // 添加工作表到工作簿
-    XLSX.utils.book_append_sheet(wb, ws, '成绩模板');
-
-    // 导出为xlsx文件
-    XLSX.writeFile(wb, '成绩导入模板.xlsx');
-}
-
 // 重新开始
 function restart() {
     // 清空数据
@@ -696,7 +608,6 @@ function restart() {
     processedData = [];
     
     // 重置输入
-    fileInput.value = '';
     pasteTextarea.value = '';
     
     // 隐藏结果

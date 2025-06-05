@@ -25,29 +25,8 @@
         <div class="card">
             <div class="card-header">成绩导入</div>
             <div class="card-body">
-                <!-- 导入方式标签页 -->
-                <div class="import-tabs">
-                    <button class="import-tab active" data-target="file-import">文件导入</button>
-                    <button class="import-tab" data-target="paste-import">文本粘贴</button>
-                </div>
-                
-                <!-- 文件导入内容 -->
-                <div id="file-import" class="import-content tab-content active">
-                    <div class="upload-area">
-                        <p>请上传包含学生成绩的Excel(.xlsx)或CSV(.csv)文件</p>
-                        <div class="file-input-wrapper">
-                            <input type="file" id="file-input" accept=".xlsx,.csv">
-                            <label for="file-input">选择文件</label>
-                        </div>
-                        <div class="template-download">
-                            <button id="download-template-btn" class="btn btn-primary">下载导入模板</button>
-                        </div>
-                        <p class="privacy-notice">所有数据仅在本地处理，不会上传到任何服务器</p>
-                    </div>
-                </div>
-                
                 <!-- 文本粘贴内容 -->
-                <div id="paste-import" class="import-content tab-content">
+                <div id="paste-import" class="import-content tab-content active">
                     <div class="paste-area">
                         <p>请粘贴包含学生成绩的文本数据（制表符分隔，第一行为表头）</p>
                         <textarea id="paste-textarea" placeholder="例如：&#10;学生ID&#9;姓名&#9;考试成绩&#10;001&#9;张三&#9;85&#10;002&#9;李四&#9;72"></textarea>
@@ -79,6 +58,16 @@
                         </div>
                         <button id="add-weight-btn" class="btn btn-primary">添加评分项</button>
                         <div id="weight-total-error" class="weight-error hidden"></div>
+                    </div>
+                </div>
+                
+                <!-- 最终成绩下限设置 -->
+                <div class="min-score-setting">
+                    <h3>最终成绩下限设置</h3>
+                    <div class="setting-row">
+                        <label for="min-score-input">最低分数：</label>
+                        <input type="number" id="min-score-input" min="0" max="100" value="60" step="1">
+                        <p class="setting-hint">设置最终成绩的最低分数，所有低于此分数的成绩将被调整为此值</p>
                     </div>
                 </div>
                 
@@ -146,8 +135,9 @@
                     <div class="accordion-header">如何使用本工具？</div>
                     <div class="accordion-content">
                         <ol>
-                            <li>上传包含学生成绩的Excel或CSV文件，或者直接粘贴成绩数据</li>
+                            <li>直接粘贴成绩数据</li>
                             <li>根据需要自定义成绩计算公式</li>
+                            <li>设置最终成绩下限（如需要）</li>
                             <li>点击"处理数据"按钮</li>
                             <li>查看处理结果，可以切换表格和图表视图</li>
                             <li>点击"导出结果"按钮将处理后的成绩导出为Excel文件</li>
@@ -158,7 +148,7 @@
                 <div class="accordion-item">
                     <div class="accordion-header">数据格式要求</div>
                     <div class="accordion-content">
-                        <p>上传的Excel或CSV文件必须包含以下列：</p>
+                        <p>粘贴的文本数据必须包含以下列：</p>
                         <ul>
                             <li><strong>学生ID</strong>：学生的唯一标识符</li>
                             <li><strong>考试成绩</strong>：学生的原始考试成绩（0-100分）</li>
@@ -168,7 +158,6 @@
                             <li><strong>姓名</strong>：学生姓名</li>
                             <li>其他任何您想包含的信息</li>
                         </ul>
-                        <p>如果不确定格式，可以点击"下载导入模板"按钮获取示例文件。</p>
                     </div>
                 </div>
                 

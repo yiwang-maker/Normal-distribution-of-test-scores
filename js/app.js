@@ -304,31 +304,38 @@ function processData() {
     // 使用自定义权重或默认权重
     const weights = customWeightsToggle.checked ? customWeights : defaultWeights;
     
-    // 生成笔记和出勤成绩，使最终成绩符合正态分布
+    // 首先计算原始最终成绩（不调整）
     processedData = originalData.map(student => {
         const result = { ...student };
-        const examScore = parseFloat(student['考试成绩']);
         
-        // 为每个权重项生成成绩（除了考试成绩）
+        // 确保考试成绩是数字
+        result['考试成绩'] = parseFloat(result['考试成绩']);
+        
+        // 使用导入的笔记和出勤成绩（如果有）或生成新的成绩
         weights.forEach(item => {
-            if (item.name !== '考试成绩' && !result[item.name]) {
-                // 生成一个随机成绩，但确保与考试成绩有一定相关性
-                const randomFactor = Math.random() * 0.4 + 0.8; // 0.8 到 1.2 之间的随机数
-                let generatedScore = examScore * randomFactor;
-                
-                // 确保生成的成绩在合理范围内
-                generatedScore = Math.max(0, Math.min(100, generatedScore));
-                result[item.name] = generatedScore.toFixed(1);
+            if (item.name !== '考试成绩') {
+                if (!result[item.name] || !item.use_imported) {
+                    // 如果没有导入的成绩或选择不使用导入的成绩，生成一个随机成绩，但确保与考试成绩有一定相关性
+                    const randomFactor = Math.random() * 0.4 + 0.8; // 0.8 到 1.2 之间的随机数
+                    let generatedScore = result['考试成绩'] * randomFactor;
+                    
+                    // 确保生成的成绩在合理范围内
+                    generatedScore = Math.max(0, Math.min(100, generatedScore));
+                    result[item.name] = parseFloat(generatedScore.toFixed(1));
+                } else {
+                    // 确保已有的成绩是数字
+                    result[item.name] = parseFloat(result[item.name]);
+                }
             }
         });
         
-        // 计算最终成绩
+        // 计算原始最终成绩
         result['最终成绩'] = calculateFinalScore(result, weights);
         
         return result;
     });
     
-    // 调整成绩以符合正态分布
+    // 调整笔记和出勤成绩，使最终成绩符合正态分布
     adjustScoresToNormalDistribution();
     
     // 显示处理后的数据
@@ -352,20 +359,49 @@ function adjustScoresToNormalDistribution() {
     // 获取最终成绩下限
     const minScore = parseFloat(minScoreInput.value) || 0;
     
-    // 调整最终成绩以符合目标正态分布
+    // 调整笔记和出勤成绩，使最终成绩符合目标正态分布
     processedData = processedData.map(student => {
         const result = { ...student };
         const finalScore = parseFloat(result['最终成绩']);
         
         // 标准化当前成绩
-        const zScore = (finalScore - currentMean) / currentStdDev;
+        const zScore = (finalScore - currentMean) / (currentStdDev || 1); // 避免除以0
         
-        // 应用目标分布参数
-        let adjustedScore = zScore * targetStdDev + targetMean;
+        // 计算目标最终成绩
+        let targetFinalScore = zScore * targetStdDev + targetMean;
         
-        // 确保调整后的成绩在合理范围内，并且不低于设定的下限
-        adjustedScore = Math.max(minScore, Math.min(100, adjustedScore));
-        result['最终成绩'] = adjustedScore.toFixed(1);
+        // 确保目标最终成绩在合理范围内，并且不低于设定的下限
+        targetFinalScore = Math.max(minScore, Math.min(100, targetFinalScore));
+        
+        // 计算需要调整的分数差
+        const scoreDifference = targetFinalScore - finalScore;
+        
+        // 根据权重分配调整量到笔记和出勤成绩
+        const weights = customWeightsToggle.checked ? customWeights : defaultWeights;
+        
+        // 找到笔记和出勤的权重项
+        const noteWeight = weights.find(w => w.name === '笔记');
+        const attendanceWeight = weights.find(w => w.name === '出勤');
+        
+        if (noteWeight && attendanceWeight) {
+            // 计算调整系数
+            const totalAdjustableWeight = noteWeight.weight + attendanceWeight.weight;
+            const noteAdjustment = (scoreDifference * noteWeight.weight / totalAdjustableWeight);
+            const attendanceAdjustment = (scoreDifference * attendanceWeight.weight / totalAdjustableWeight);
+            
+            // 调整笔记成绩
+            let adjustedNoteScore = result['笔记'] + noteAdjustment / (noteWeight.weight || 0.001); // 避免除以0
+            adjustedNoteScore = Math.max(0, Math.min(100, adjustedNoteScore));
+            result['笔记'] = parseFloat(adjustedNoteScore.toFixed(1));
+            
+            // 调整出勤成绩
+            let adjustedAttendanceScore = result['出勤'] + attendanceAdjustment / (attendanceWeight.weight || 0.001); // 避免除以0
+            adjustedAttendanceScore = Math.max(0, Math.min(100, adjustedAttendanceScore));
+            result['出勤'] = parseFloat(adjustedAttendanceScore.toFixed(1));
+            
+            // 重新计算最终成绩
+            result['最终成绩'] = calculateFinalScore(result, weights);
+        }
         
         return result;
     });
@@ -489,7 +525,7 @@ function renderFinalChart(scores) {
             labels: histogramData.labels,
             datasets: [
                 {
-                    label: '频数',
+                    label: '最终成绩频数',
                     data: histogramData.frequencies,
                     backgroundColor: 'rgba(92, 184, 92, 0.7)',
                     borderColor: 'rgba(92, 184, 92, 1)',
@@ -527,7 +563,7 @@ function renderFinalChart(scores) {
             plugins: {
                 title: {
                     display: true,
-                    text: '最终成绩分布'
+                    text: '最终成绩分布（符合正态分布）'
                 }
             }
         }

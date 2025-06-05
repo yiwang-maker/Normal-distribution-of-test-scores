@@ -86,6 +86,7 @@
                 </div>
                 
                 <div class="chart-container">
+                    <h3>原始考试成绩分布</h3>
                     <canvas id="original-chart"></canvas>
                 </div>
                 
@@ -116,6 +117,7 @@
                 
                 <div id="chart-view" class="tab-content">
                     <div class="chart-container">
+                        <h3>最终成绩分布（符合正态分布）</h3>
                         <canvas id="final-chart"></canvas>
                     </div>
                 </div>
@@ -156,6 +158,8 @@
                         <p>可选列：</p>
                         <ul>
                             <li><strong>姓名</strong>：学生姓名</li>
+                            <li><strong>笔记</strong>：学生的笔记成绩（如果已有）</li>
+                            <li><strong>出勤</strong>：学生的出勤成绩（如果已有）</li>
                             <li>其他任何您想包含的信息</li>
                         </ul>
                     </div>
@@ -167,11 +171,11 @@
                         <p>正态分布是一种常见的概率分布，在教育评估中广泛应用。本工具会：</p>
                         <ul>
                             <li>分析原始考试成绩</li>
-                            <li>生成笔记和出勤成绩</li>
-                            <li>调整这些成绩，使最终成绩符合正态分布</li>
+                            <li>生成或调整笔记和出勤成绩</li>
+                            <li>通过调整笔记和出勤成绩，使最终成绩符合正态分布</li>
                             <li>默认目标分布的平均分为70分，标准差为10</li>
                         </ul>
-                        <p>这种方法可以使成绩分布更加合理，避免分数过于集中或分散。</p>
+                        <p>这种方法可以使成绩分布更加合理，避免分数过于集中或分散，同时保持考试成绩不变。</p>
                     </div>
                 </div>
             </div>
